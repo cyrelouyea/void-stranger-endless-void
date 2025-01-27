@@ -6,7 +6,6 @@
 #macro MULTIPLIER_CHAR "X"
 
 
-
 function level_struct() constructor {
 
 	name = ""
@@ -16,14 +15,21 @@ function level_struct() constructor {
 	author_brand = int64(0)
 	
 	burdens = [false, false, false, false, false]
+	
 	tiles = array_create(9);
 	objects = array_create(9);
+	secrets = array_create(9); 
+	
+	
 	for (var i = 0; i < array_length(tiles) - 1; i++)
 		tiles[i] = array_create(14, new tile_with_state(global.editor_instance.tile_pit))	
 	tiles[8] = array_create(14, new tile_with_state(global.editor_instance.tile_unremovable))	
 	
 	for (var i = 0; i < array_length(objects); i++)
-		objects[i] = array_create(14, new tile_with_state(global.editor_instance.object_empty))	
+		objects[i] = array_create(14, new tile_with_state(global.editor_instance.object_empty))
+		
+	for (var i = 0; i < array_length(objects); i++)
+		secrets[i] = array_create(14, new tile_with_state(global.editor_instance.object_empty))	
 		
 	// This name will be used for when the file is saved.
 	save_name = generate_save_name()
@@ -31,13 +37,14 @@ function level_struct() constructor {
 	last_edit_date = "";
 	
 }
+
 function place_placeholder_tiles(level) {
 	level.objects[@ 4][6] = new tile_with_state(global.editor_instance.object_player)
 	level.tiles[@ 2][6] = new tile_with_state(global.editor_instance.tile_exit)
 	for (var i = 0; i < 3; i++) {
 		for (var j = 0; j < 3; j++)
 			level.tiles[@ 3 + i][5 + j] = new tile_with_state(global.editor_instance.tile_default)
-	}	
+	}
 	return level;
 }
 
@@ -75,14 +82,17 @@ function export_level_arr(level) {
 	var upload_date_string = "";
 	var last_edit_date_string = "";
 
-	var tile_string = ""
-	var object_string = ""
+	var tile_string = "";
+	var object_string = "";
+	var secret_string = "";
 	
 	var tile_previous = "";
-	var object_previous = ""
+	var object_previous = "";
+	var secret_previous = "";
 	
 	var tile_multiplier = 1;
 	var object_multiplier = 1;
+	var secret_multiplier = 1;
 	
 	for (var i = 0; i < 9; i++)	{
 		for (var j = 0; j < 14; j++) {
@@ -119,6 +129,23 @@ function export_level_arr(level) {
 				object_string += addition;
 			}
 			object_previous = addition
+			
+			var addition = "";
+			var secret_state = level.secrets[i][j];
+			var secret = secret_state.tile;
+			
+			addition += object.iostruct.write(secret_state);
+			
+			if (addition == secret_previous)
+				secret_multiplier++;
+			else {
+				if secret_multiplier != 1 { 
+					secret_string += MULTIPLIER_CHAR + string(secret_multiplier)
+					secret_multiplier = 1	
+				}
+				secret_string += addition;
+			}
+			secret_previous = addition
 		}
 	}
 	
@@ -128,9 +155,12 @@ function export_level_arr(level) {
 	if object_multiplier != 1 
 		object_string += MULTIPLIER_CHAR + string(object_multiplier)
 		
+	if secret_multiplier != 1 
+		secret_string += MULTIPLIER_CHAR + string(secret_multiplier)
+		
 	return [version_string, name_string, description_string, music_string, 
 		author_string, author_brand_string, upload_date_string, last_edit_date_string,
-		burdens_string, tile_string, object_string]
+		burdens_string, tile_string, object_string, secret_string]
 }
 
 // returns the level in string format
@@ -190,7 +220,7 @@ function import_level(level_string) {
 	var level = new level_struct()
 	
 	var strings = ev_string_split(level_string, "|");
-	if array_length(strings) != 11 {
+	if array_length(strings) != 12 {
 		return place_placeholder_tiles(level);
 	}
 	var version_string = strings[0];
@@ -217,10 +247,12 @@ function import_level(level_string) {
 
 	var tile_string = strings[9]
 	var object_string = strings[10]
+	var secret_string = strings[11]
 
 
 	import_process_tiles(tile_string, level, 7, global.editor_instance.tile_pit, version)
 	import_process_tiles(object_string, level, 8,  global.editor_instance.object_empty, version)
+	import_process_tiles(secret_string, level, 8,  global.editor_instance.object_empty, version)
 	
 	return level
 }
@@ -249,8 +281,10 @@ function import_process_tiles(tile_string, level, height, failsafe_tile, version
 		repeat (mult) {
 			if (tile.editor_type == editor_types.tile)
 				level.tiles[@ i][j] = new tile_with_state(state.tile, struct_copy(state.properties))
-			else
+			else if (tile.editor_type == editor_types.object)
 				level.objects[@ i][j] = new tile_with_state(state.tile, struct_copy(state.properties))
+			else
+				level.secrets[@ i][j] = new tile_with_state(state.tile, struct_copy(state.properties))
 			
 			j++;
 			if (j >= 14) {

@@ -12,7 +12,7 @@ function draw() {
 	surface_set_target(game_surface)
 	draw_clear_alpha(c_black, 1)
 
-	var tile_mode = display_context == display_contexts.level_editor ? global.tile_mode : false
+	var tile_mode = global.tile_mode
 
 
 	function draw_tile_state(i, j, tile_state, preview = false) {
@@ -62,23 +62,38 @@ function draw() {
 			if (i != 4) draw_sprite_part(burdens_sprite, 0, 16 + i * 16, 0, 16, 16, 16 * (8 + i), 8 * 16)		
 		}
 	}
-
+	
+	draw_set_alpha(1)
+	
 	for (var i = 0; i < 9; i++)	{
 		for (var j = 0; j < 14; j++) {
 			if i != 8 {
 				var tile_state = lvl.tiles[i][j]
 				draw_tile_state(i, j, tile_state)
 			}
-	
-			if (tile_mode)
-				draw_set_alpha(0.3)
-			var object_state = lvl.objects[i][j]
-			draw_tile_state(i, j, object_state)
-			if (tile_mode)
-				draw_set_alpha(1)
 		}
 	}
-
+	
+	draw_set_alpha(tile_mode == editor_types.secret ? 1 : 0.3)
+	
+	for (var i = 0; i < 9; i++)	{
+		for (var j = 0; j < 14; j++) {
+			var tile_state = lvl.secrets[i][j]
+			draw_tile_state(i, j, tile_state)
+		}
+	}
+	
+	draw_set_alpha(tile_mode == editor_types.object ? 1 : 0.3)
+	
+	for (var i = 0; i < 9; i++)	{
+		for (var j = 0; j < 14; j++) {
+			var tile_state = lvl.objects[i][j]
+			draw_tile_state(i, j, tile_state)
+		}
+	}
+	
+	
+	draw_set_alpha(1)
 
 	if (display_context == display_contexts.level_editor && ev_is_mouse_on_me()) {
 		var tile_j = floor((mouse_x - x) / (16 * image_xscale))

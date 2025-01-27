@@ -17,9 +17,15 @@ function ev_place_level_instances(level) {
 			if i != 8 {
 				tile.iostruct.place(tile_state, i, j, global.wall_tilemaps, global.edge_tilemaps, level)
 			}
+			
+			var secret_state = level.secrets[i][j];
+			var secret = secret_state.tile
+			secret.iostruct.place(secret_state, i, j, global.wall_tilemaps, global.edge_tilemaps, level)
+			
 			var object_state = level.objects[i][j];
 			var object = object_state.tile
 			object.iostruct.place(object_state, i, j, global.wall_tilemaps, global.edge_tilemaps, level)
+			
 		}
 	}
 }

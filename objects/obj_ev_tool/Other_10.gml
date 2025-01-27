@@ -14,17 +14,17 @@ switch (image_index) {
 		break;
 	case 2: // tile mode on
 	case 3: // object mode on
-		global.editor_instance.switch_tile_mode(!global.tile_mode);
-
+	case 4: // secret mode on
+		global.editor_instance.switch_to_next_tile_mode();
 		break;
-	case 4: // undo
+	case 5: // undo
 		global.editor_instance.undo();
 		break;
-	case 5: // trash bin
+	case 6: // trash bin
 		global.erasing = 350;
 		audio_play_sound(comes_sound, 10, false, 1, 0, 1)
 		break;
-	case 6: // picker
+	case 7: // picker
 		if (global.selected_thing != thing_picker)
 			global.selected_thing = thing_picker
 		else

@@ -117,19 +117,30 @@ function handle_click(tile_i, tile_j) {
 				
 			}
 			else {
+				var final_state;
+				
+				var current_tile_state = global.editor_instance.current_placeables[tile_i][tile_j];
 				var object_state = lvl.objects[tile_i][tile_j];
 				var tile_state = lvl.tiles[tile_i][tile_j];
+				var secret_state = lvl.secrets[tile_i][tile_j];
 				
-				var final_state;
-				if !(object_state.tile.flags & flag_unplaceable) {
-					final_state = object_state
-					if global.tile_mode == true
-						global.editor_instance.switch_tile_mode(false)		
+				if !(current_tile_state.tile.flags & flag_unplaceable) {
+					final_state = current_tile_state
 				}
-				else if !(tile_state.tile.flags & flag_unplaceable){
+				else if !(object_state.tile.flags & flag_unplaceable) {
+					final_state = object_state
+					if global.tile_mode != editor_types.object
+						global.editor_instance.switch_tile_mode(editor_types.object)		
+				}
+				else if !(secret_state.tile.flags & flag_unplaceable) {
+					final_state = secret_state
+					if global.tile_mode != editor_types.secret
+						global.editor_instance.switch_tile_mode(editor_types.secret)	
+				}
+				else if !(tile_state.tile.flags & flag_unplaceable) {
 					final_state = tile_state
-					if global.tile_mode == false
-						global.editor_instance.switch_tile_mode(true)	
+					if global.tile_mode != editor_types.tile
+						global.editor_instance.switch_tile_mode(editor_types.tile)	
 				}
 				else 
 					return;

@@ -5,7 +5,8 @@ if selected and window == noone {
 	exit
 }
 global.selected_thing = 2
-var ind = global.tile_mode ? tile_ind : object_ind
+var ind = global.tile_mode == editor_types.tile ? tile_ind : (global.tile_mode == editor_types.object ? object_ind : secret_ind)
+show_debug_message(ind)
 global.selected_placeable_num = ind
 var tile = global.editor_instance.current_list[ind]
 global.display_object.switch_held_tile(new tile_with_state(tile))

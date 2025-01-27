@@ -76,23 +76,26 @@ switch (display_context) {
 						return false;
 					}
 			
-					function region_has_objects(from_i, from_j, to_i, to_j) {
+					function region_has_objects(from_i, from_j, to_i, to_j, layer_array) {
 						for (var i = from_i; i <= to_i; i++) {
 							for (var j = from_j; j <= to_j; j++) {
-								if (lvl.objects[i][j].tile != global.editor_instance.object_empty)
+								if (layer_array[i][j].tile != global.editor_instance.object_empty)
 									return true;
 							}
 						}	
 						return false;
 					}
-					if (!global.tile_mode 
+			
+					
+					if (global.tile_mode != editor_types.tile
 							&& (global.selected_thing == thing_picker
 								|| global.selected_thing == thing_plucker
 								|| global.selected_thing == thing_eraser)
-							&& !region_has_objects(small_tile_i, small_tile_j, tile_i, tile_j)
+							&& !region_has_objects(small_tile_i, small_tile_j, tile_i, tile_j, lvl.objects)
+							&& !region_has_objects(small_tile_i, small_tile_j, tile_i, tile_j, lvl.secrets)
 							&& region_has_tiles(small_tile_i, small_tile_j, tile_i, tile_j)) 
 					{
-						global.editor_instance.switch_tile_mode(true)
+						global.editor_instance.switch_tile_mode(editor_types.tile)
 					}
 					
 					

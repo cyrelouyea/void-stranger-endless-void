@@ -1,9 +1,11 @@
 
 var tile;
-if(global.tile_mode) {
+if(global.tile_mode == editor_types.tile) {
 	tile = global.editor_instance.current_list[tile_ind]
-} else {
+} else if (global.tile_mode == editor_types.object) {
 	tile = global.editor_instance.current_list[object_ind]
+} else {
+	tile = global.editor_instance.current_list[secret_ind]
 }
 
 if (tile == global.editor_instance.object_player)
@@ -19,10 +21,13 @@ if selected {
 		draw_sprite_ext(sprite_index, 0, x, y, scale_x, scale_y, 0, c_white, 1)
 	}
 	else {
-		if (global.tile_mode)
+		if (global.tile_mode == editor_types.tile)
 			var tile = global.editor_instance.tiles_list[inst.tile_ind]	
-		else 
+		else if (global.tile_mode == editor_types.object)
 			var tile = global.editor_instance.objects_list[inst.object_ind]
+		else 
+			var tile = global.editor_instance.secrets_list[inst.secret_ind]
+			
 		draw_sprite_ext(sprite_index, 0, x, y, scale_x, scale_y, 0, c_white, alpha)
 		draw_sprite_ext(tile.spr_ind, 0, x, y, scale_x, scale_y, 0, c_white, 1 - alpha)
 	}

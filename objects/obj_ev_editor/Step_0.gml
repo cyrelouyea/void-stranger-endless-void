@@ -155,7 +155,7 @@ else if (edit_pack_transition != -1) {
 
 if room == global.editor_room { 
 	if ev_is_tile_mode_hotkey_pressed() && global.mouse_layer == 0 {
-		switch_tile_mode(!global.tile_mode)
+		switch_to_next_tile_mode();
 		audio_play_sound(global.select_sound, 10, false, 1, 0, 1.2)
 	}
 

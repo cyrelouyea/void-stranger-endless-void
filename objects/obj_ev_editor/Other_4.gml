@@ -15,7 +15,7 @@ if room == asset_get_index("rm_ev_editor") {
 	draw_set_circle_precision(48)
 	global.selected_thing = -1
 	
-	switch_tile_mode(false)
+	switch_tile_mode(editor_types.object);
 	if (!audio_is_playing(asset_get_index(global.level.music)))
 		ev_play_music(asset_get_index(global.level.music))	
 }

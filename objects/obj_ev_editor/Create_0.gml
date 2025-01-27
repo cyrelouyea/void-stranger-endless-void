@@ -162,7 +162,8 @@ default_tile_io = {
 
 enum editor_types {
 	tile,
-	object
+	object,
+	secret,
 }
 enum cube_types {
 	uniform,
@@ -192,7 +193,11 @@ function editor_tile(display_name, spr_ind, tile_id, obj_name, obj_layer = "Floo
 function editor_object(display_name, spr_ind, tile_id, obj_name, obj_layer = "Instances", flags = 0) 
 		: editor_tile(display_name, spr_ind, tile_id, obj_name, obj_layer, flags) constructor {
 	self.editor_type = editor_types.object;
-} 
+}
+function editor_secret(display_name, spr_ind, tile_id, obj_name, obj_layer = "Instances", flags = 0) 
+		: editor_tile(display_name, spr_ind, tile_id, obj_name, obj_layer, flags) constructor {
+	self.editor_type = editor_types.secret;
+}
 
 #macro pit_id "pt"
 #macro pit_obj "obj_pit"
@@ -363,6 +368,10 @@ function editor_object(display_name, spr_ind, tile_id, obj_name, obj_layer = "In
 #macro scaredeer_id "sd"
 #macro scaredeer_obj "obj_enemy_cs"
 #macro scaredeer_name "Scaredeer"
+
+#macro secret_bonus_id "bn"
+#macro secret_bonus_obj "obj_ee_bonus"
+#macro secret_bonus_name "Secret Bonus"
 
 floor_sprite = asset_get_index("spr_floor");
 
@@ -1143,7 +1152,7 @@ object_tree.iostruct = {
 	},
 }
 
-object_secret_exit = new editor_object(secret_exit_name, asset_get_index("spr_ev_secret_exit_arrow"), secret_exit_id, secret_exit_obj)
+object_secret_exit = new editor_secret(secret_exit_name, asset_get_index("spr_ev_secret_exit_arrow"), secret_exit_id, secret_exit_obj)
 
 
 // 0 - invisible, 1 - stars, 2 - stink lines
@@ -1227,7 +1236,7 @@ surface_reset_target()
 var crystal_sprite_with_outline = sprite_create_from_surface(surface_crystal, 0, 0, 16, 16, false, false, 8, 8)
 surface_free(surface_crystal)
 
-object_memory_crystal = new editor_object(memory_crystal_name, crystal_sprite_with_outline, memory_crystal_id, memory_crystal_obj, "Instances", flag_only_one)
+object_memory_crystal = new editor_secret(memory_crystal_name, crystal_sprite_with_outline, memory_crystal_id, memory_crystal_obj, "Instances", flag_only_one)
 object_memory_crystal.draw_function = function(tile_state, i, j, preview, lvl, no_spoilers) {
 	draw_sprite(global.editor_instance.crystal_sprite, 0, j * 16 + 8, i * 16 + 8)	
 }
@@ -1286,7 +1295,6 @@ object_scaredeer.iostruct = {
 			e_falling_sprite = asset_get_index("spr_fall");
 		}
 	},
-
 }
 
 // we create the hologram sprite in real time
@@ -1308,11 +1316,15 @@ object_hologram.draw_function = function(tile_state, i, j, preview, lvl, no_spoi
 }
 
 
+
+
 global.player_tiles = array_create(7)
 global.player_objects = array_create(7)
+global.player_secrets = array_create(7)
 for (var i = 0; i < 7; i++) {
 	global.player_tiles[i] = i	
-	global.player_objects[i] = i	
+	global.player_objects[i] = i
+	global.player_secrets[i] = i
 }
 
 
@@ -1323,15 +1335,16 @@ tiles_list = [tile_default, tile_glass, tile_bomb, tile_explo, tile_floorswitch,
 
 objects_list = [object_player, object_leech, object_maggot, object_bull, object_gobbler, object_hand, 
 	object_mimic, object_diamond, object_hungry_man, object_add, object_cif, object_bee, object_tan, object_lev, object_mon, object_eus, object_gor, 
-	object_jukebox, object_egg, object_hologram, object_tree, object_memory_crystal, object_secret_exit,
-	object_spider, object_scaredeer, object_orb]
+	object_jukebox, object_egg, object_hologram, object_tree, object_spider, object_scaredeer, object_orb]
+	
+secrets_list = [object_secret_exit, object_memory_crystal, object_secret_exit, object_memory_crystal, object_secret_exit, object_memory_crystal, object_secret_exit]
 
 global.music_names = ["", "msc_001", "msc_dungeon_wings", "msc_beecircle", "msc_dungeongroove", "msc_013",
 	"msc_gorcircle_lo", "msc_levcircle", "msc_escapewithfriend", "msc_cifcircle", "msc_006", "msc_beesong", "msc_themeofcif",
 	"msc_monstrail", "msc_endless", "msc_stg_extraboss", "msc_rytmi2", "msc_test2"]
 
 function reset_global_level() {
-	global.tile_mode = false
+	global.tile_mode = editor_types.object
 	global.mouse_layer = 0
 	global.selected_thing = -1 
 	global.selected_placeable_num = 0
@@ -1347,20 +1360,41 @@ function reset_global_level() {
 reset_global_level()
 
 
-
+function switch_to_next_tile_mode() {
+	switch (global.tile_mode) {
+		case editor_types.tile:
+			switch_tile_mode(editor_types.object);
+			break;
+		case editor_types.object:
+			switch_tile_mode(editor_types.secret);
+			break;
+		case editor_types.secret:
+			switch_tile_mode(editor_types.tile);
+			break;
+	}
+}
 
 function switch_tile_mode(new_tile_mode) {
 	global.tile_mode = new_tile_mode;
-	if (global.tile_mode) {
-		current_list = tiles_list
-		current_placeables = global.level.tiles
-		current_empty_tile = tile_pit
+	
+	switch (global.tile_mode) {
+		case editor_types.tile:
+			current_list = tiles_list;
+			current_placeables = global.level.tiles;
+			current_empty_tile = tile_pit;
+			break;
+		case editor_types.object:
+			current_list = objects_list;
+			current_placeables = global.level.objects;
+			current_empty_tile = object_empty;
+			break;
+		case editor_types.secret:
+			current_list = secrets_list;
+			current_placeables = global.level.secrets;
+			current_empty_tile = object_empty;
+			break;
 	}
-	else {
-		current_list = objects_list
-		current_placeables = global.level.objects
-		current_empty_tile = object_empty
-	}
+	
 	if (global.selected_thing == thing_placeable || global.selected_thing == thing_multiplaceable) {
 		global.selected_thing = -1
 		global.selected_placeable_num = -1
@@ -1392,7 +1426,7 @@ function copy_tile_data(tiles) {
 
 // computers have infinite memory.
 function add_undo() {
-	array_push(history, copy_tile_data(global.level.tiles), copy_tile_data(global.level.objects))
+	array_push(history, copy_tile_data(global.level.tiles), copy_tile_data(global.level.objects), copy_tile_data(global.level.secrets))
 	if array_length(history) > 500 // will remember 250 changes before removing
 		array_delete(history, 0, 2)
 }
@@ -1402,6 +1436,7 @@ function undo() {
 	if array_length(history) != 0 {
 		array_copy(global.level.objects, 0, array_pop(history), 0, array_length(global.level.objects))
 		array_copy(global.level.tiles, 0, array_pop(history), 0, array_length(global.level.tiles))
+		array_copy(global.level.secrets, 0, array_pop(history), 0, array_length(global.level.secrets))
 		audio_play_sound(undo_sound, 10, false)
 	}
 }

@@ -1,5 +1,5 @@
 
-var ind = global.tile_mode ? tile_ind : object_ind
+var ind = global.tile_mode == editor_types.tile ? tile_ind : (global.tile_mode == editor_types.object ? object_ind : secret_ind)
 var tile = global.editor_instance.current_list[ind]
 if (tile == global.editor_instance.object_player)
 	sprite_index = ev_get_stranger_down_sprite(global.stranger)
@@ -9,7 +9,7 @@ else
 
 
 if (selected) {
-	if (global.tile_mode) {
+	if (global.tile_mode == editor_types.tile) {
 		var color = c_black
 		var sprite = global.white_floor_sprite
 	}
